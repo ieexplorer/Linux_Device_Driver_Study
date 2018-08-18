@@ -10,8 +10,8 @@ struct scull_dev {
 	 int 				qset;
 	 unsigned long 		size;
 	 unsigned int 		access_key;
-	 stuct semaphore 	sem;
-	 stuct cdev 		cdev;
+	 struct semaphore 	sem;
+	 struct cdev 		cdev;
 
 };
 #endif
