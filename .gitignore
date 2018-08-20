@@ -3,3 +3,6 @@
 *.o
 *.order
 *.symvers
+*.cache.mk
+*.cmd
+*.tmp_version*

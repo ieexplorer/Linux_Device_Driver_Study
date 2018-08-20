@@ -49,6 +49,17 @@ struct file_operations scull_fops =
 struct scull_dev dev;
 struct class *scull_class;
 
+
+
+static char *scull_devnode (struct device *dev, umode_t *mode)
+{
+	if (!mode) // Essential!!!
+        return NULL;
+	
+	*mode = 0666;
+	return NULL;
+}
+
 static void scull_setup_cdev (struct scull_dev * dev)
 {
 	int err = 0;
@@ -56,9 +67,10 @@ static void scull_setup_cdev (struct scull_dev * dev)
 	devno = MKDEV (scull_major, scull_minor);
 	
 	cdev_init (&(dev -> cdev), &scull_fops);
+	
 	dev->cdev.owner = THIS_MODULE;
 	dev->cdev.ops 	= &scull_fops; 
-
+	
 	err = cdev_add (&dev->cdev, devno, 1);
 
 	if(err != 0)
@@ -74,7 +86,9 @@ static void scull_setup_cdev (struct scull_dev * dev)
         printk(KERN_ALERT "class_create error..\n");
         return ;
     }
-	
+    /*Set the permission of device */
+	scull_class -> devnode = scull_devnode;
+
 	if ( device_create(scull_class, NULL, devno, NULL, "scull_device") == NULL)
 		    printk(KERN_ALERT "scull: device failed!\n");
 
@@ -116,43 +130,10 @@ int scull_open (struct inode *inode, struct file *filp)
 	return 0;
 }
 
-void scull_trim (struct scull_dev *dev)
-{
-	struct scull_qset *qset_ptr = NULL;
-
-	if( (qset_ptr = dev -> data) == NULL)
-		return ;
-
-	for ( ; ;)
-	{
-		
-		int i = 0;
-		qptr_array_ptr* array_ptr = NULL;
-		
-		array_ptr = qset_ptr -> qtum_ptr; 
- 		
- 		for (i = 0; i < QTUM_PTR_ARRAY_SIZE; i++)
-		{			
-			kfree( (*array_ptr)[i] ); //kfree() accepts null pointer
-		}
-		
-		kfree(array_ptr);
-
-		if(qset_ptr -> qset_next == NULL)
-			break;
-		else
-			qset_ptr = qset_ptr -> qset_next;
-	}
-
-	dev -> size = 0;
-	dev -> data = NULL;
-}
-
 static void scull_exit(void)
 {
-	devno = MKDEV (scull_major, scull_minor);
 
-    scull_trim (&dev);
+    // scull_trim (&dev);
     
 	device_destroy(scull_class, devno);
 	class_destroy(scull_class);
