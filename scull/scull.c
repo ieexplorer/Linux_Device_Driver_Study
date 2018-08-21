@@ -32,6 +32,8 @@ dev_t i_dev;
 int devno = 0;
 
 ssize_t scull_read (struct file *filp, char __user *buf, size_t count, loff_t *f_ops);
+ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, loff_t *f_ops);
+
 int scull_open (struct inode *inode, struct file *filp);
 int scull_release(struct inode *inode, struct file *filp);
 
@@ -163,13 +165,24 @@ ssize_t scull_read (struct file *filp, char __user *buf, size_t count, loff_t *f
 	return count;
 }
 
-ssize_t scull_write (struct file *filp, char __user *buf, size_t count, loff_t *f_ops)
+ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, loff_t *f_ops)
 {
 	struct scull_dev *dev = filp -> private_data;
 	struct scull_qset *dptr = NULL;
 
-	int i_vacancy, wr_cnt = 0;	
+	int i_vacancy; //point to the next row empty
+	int wr_cnt = 0;	
 	
+	char * write_buf = kmalloc (sizeof(char) * count, GFP_KERNEL);
+
+	if (count == 0)
+		return 0;
+
+	if (copy_from_user (write_buf, buf ,count))
+	{
+		return -EFAULT;
+	}
+
 	if (dev -> data == NULL) //Initial state, no memory allocated
 	{
 		dev -> data = kmalloc (sizeof(struct scull_qset), GFP_KERNEL);
@@ -190,19 +203,59 @@ ssize_t scull_write (struct file *filp, char __user *buf, size_t count, loff_t *
 			break;
 	}
 
-	if (i_vacancy == 0) // The first row is empty 
-		(*(dptr -> qtum_ptr))[i_vacancy] = kmalloc (sizeof(qtum_array), GFP_KERNEL);
-	else
-		i_vacancy = i_vacancy - 1;
+	i_vacancy %= QTUM_PTR_ARRAY_SIZE;
 
+	if (i_vacancy == 0) // The 0th row is empty 
+	{
+		(*(dptr -> qtum_ptr))[i_vacancy] = kmalloc (sizeof(qtum_array), GFP_KERNEL);
+		i_vacancy = 1;
+	}	
+	
+		
 	for ( wr_cnt = 0; wr_cnt < count; wr_cnt++)
 	{
+		qtum_array_ptr wr_array_ptr = NULL;
+
 		if ( dev -> array_wr_ptr = 0) // The qtum to be written is in a new row
 		{
-			if (i_vacancy == 0) //Need a new qset to store data			
-		}		
+			if (i_vacancy == 0) //Need a new qset 
+			{
+				dptr -> qset_next = kmalloc (sizeof(struct scull_qset), GFP_KERNEL);
+				
+				if (dptr -> qset_next = NULL)
+					return -ENOMEM;
+				
+				dptr = dptr -> qset_next;
+				
+				(*(dptr -> qtum_ptr))[i_vacancy] = kmalloc (sizeof(qtum_array), GFP_KERNEL);
+				
+				if ((*(dptr -> qtum_ptr))[i_vacancy] = NULL)
+					return -ENOMEM;
+
+				i_vacancy ++;
+			}
+			else
+			{
+				(*(dptr -> qtum_ptr))[i_vacancy] = kmalloc (sizeof(qtum_array), GFP_KERNEL);
+				
+				if ((*(dptr -> qtum_ptr))[i_vacancy] = NULL)
+					return -ENOMEM;
+				
+				i_vacancy ++;
+				i_vacancy %= QTUM_PTR_ARRAY_SIZE;
+			}
+		}
+
+		wr_array_ptr = (*(dptr -> qtum_ptr))[i_vacancy - 1]
+		
+		(*wr_array_ptr)[(dev -> array_wr_ptr) - 1] = *write_buf;		
+		dev -> array_wr_ptr ++;
+		dev -> array_wr_ptr %= QTUM_ARRAY_SIZE;
+		write_buf ++;
+
 	}
 
+	return count;
 
 
 }		
