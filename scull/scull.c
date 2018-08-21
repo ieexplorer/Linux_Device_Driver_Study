@@ -40,7 +40,7 @@ struct file_operations scull_fops =
 	.owner 		= THIS_MODULE,
 	// .llseek 	= scull_llseek,
 	.read 		= scull_read,
-	// .write 		= scull_write,
+	.write 		= scull_write,
 	// .ioctl 		= scull_ioctl,
 	.open 		= scull_open,
 	.release	= scull_release,
@@ -48,8 +48,6 @@ struct file_operations scull_fops =
 
 struct scull_dev dev;
 struct class *scull_class;
-
-
 
 static char *scull_devnode (struct device *dev, umode_t *mode)
 {
@@ -127,13 +125,14 @@ int scull_open (struct inode *inode, struct file *filp)
 		return -EINVAL;
 	}
 
+	dev -> array_wr_ptr = 0;
+	dev -> array_rd_ptr = 0;
+
 	return 0;
 }
 
 static void scull_exit(void)
 {
-
-    // scull_trim (&dev);
     
 	device_destroy(scull_class, devno);
 	class_destroy(scull_class);
@@ -163,6 +162,51 @@ ssize_t scull_read (struct file *filp, char __user *buf, size_t count, loff_t *f
 	
 	return count;
 }
+
+ssize_t scull_write (struct file *filp, char __user *buf, size_t count, loff_t *f_ops)
+{
+	struct scull_dev *dev = filp -> private_data;
+	struct scull_qset *dptr = NULL;
+
+	int i_vacancy, wr_cnt = 0;	
+	
+	if (dev -> data == NULL) //Initial state, no memory allocated
+	{
+		dev -> data = kmalloc (sizeof(struct scull_qset), GFP_KERNEL);
+		dptr = dev -> data;
+		dptr -> qset_next = NULL;
+	}
+	else
+	{
+		dptr = dev -> data;		
+	}
+
+	while (dptr -> qset_next != NULL)
+		dptr = dptr -> qset_next; //Find the first potential qset in vacancy
+
+	for (i_vacancy = 0; i_vacancy < QTUM_PTR_ARRAY_SIZE; i_vacancy++ ) //search the qtum array in vacancy
+	{
+		if ( (*(dptr -> qtum_ptr))[i_vacancy] == NULL)
+			break;
+	}
+
+	if (i_vacancy == 0) // The first row is empty 
+		(*(dptr -> qtum_ptr))[i_vacancy] = kmalloc (sizeof(qtum_array), GFP_KERNEL);
+	else
+		i_vacancy = i_vacancy - 1;
+
+	for ( wr_cnt = 0; wr_cnt < count; wr_cnt++)
+	{
+		if ( dev -> array_wr_ptr = 0) // The qtum to be written is in a new row
+		{
+			if (i_vacancy == 0) //Need a new qset to store data			
+		}		
+	}
+
+
+
+}		
+
 
 int scull_release(struct inode *inode, struct file *filp)
 {
