@@ -214,22 +214,22 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 		
 	for ( wr_cnt = 0; wr_cnt < count; wr_cnt++)
 	{
-		qtum_array_ptr wr_array_ptr = NULL;
+		qtum_array* wr_array_ptr = NULL;
 
-		if ( dev -> array_wr_ptr = 0) // The qtum to be written is in a new row
+		if ( dev -> array_wr_ptr == 0) // The qtum to be written is in a new row
 		{
 			if (i_vacancy == 0) //Need a new qset 
 			{
 				dptr -> qset_next = kmalloc (sizeof(struct scull_qset), GFP_KERNEL);
 				
-				if (dptr -> qset_next = NULL)
+				if (dptr -> qset_next == NULL)
 					return -ENOMEM;
 				
 				dptr = dptr -> qset_next;
 				
 				(*(dptr -> qtum_ptr))[i_vacancy] = kmalloc (sizeof(qtum_array), GFP_KERNEL);
 				
-				if ((*(dptr -> qtum_ptr))[i_vacancy] = NULL)
+				if ((*(dptr -> qtum_ptr))[i_vacancy] == NULL)
 					return -ENOMEM;
 
 				i_vacancy ++;
@@ -238,7 +238,7 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 			{
 				(*(dptr -> qtum_ptr))[i_vacancy] = kmalloc (sizeof(qtum_array), GFP_KERNEL);
 				
-				if ((*(dptr -> qtum_ptr))[i_vacancy] = NULL)
+				if ((*(dptr -> qtum_ptr))[i_vacancy] == NULL)
 					return -ENOMEM;
 				
 				i_vacancy ++;
