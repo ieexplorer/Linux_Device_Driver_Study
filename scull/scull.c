@@ -246,7 +246,7 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 			}
 		}
 
-		wr_array_ptr = (*(dptr -> qtum_ptr))[i_vacancy - 1]
+		wr_array_ptr = (*(dptr -> qtum_ptr))[i_vacancy - 1];
 		
 		(*wr_array_ptr)[(dev -> array_wr_ptr) - 1] = *write_buf;		
 		dev -> array_wr_ptr ++;
