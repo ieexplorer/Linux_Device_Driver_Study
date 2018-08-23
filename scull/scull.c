@@ -177,7 +177,11 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 
 	if (count == 0)
 		return 0;
-
+	if ( access_ok (VERIFIY_READ, (void __user*)buf, count))
+	{
+		return -EFAULT;
+	}
+	
 	if (copy_from_user (write_buf, buf ,count))
 	{
 		return -EFAULT;
