@@ -122,11 +122,6 @@ int scull_open (struct inode *inode, struct file *filp)
 	dev = container_of (inode -> i_cdev, struct scull_dev, cdev);
 	filp->private_data = dev;
 
-	if( (filp->f_flags & O_ACCMODE) != O_RDONLY)
-	{
-		return -EINVAL;
-	}
-
 	dev -> array_wr_ptr = 0;
 
 	return 0;
@@ -178,31 +173,52 @@ ssize_t scull_read (struct file *filp, char __user *buf, size_t count, loff_t *f
 	struct scull_dev *dev 	= filp -> private_data;
 	struct scull_qset *dptr = NULL;
 	qptr_array *qtum_ptr = NULL;
+	
 	size_t i = 0;
+	ssize_t retval = 0;
 
 	char * read_buf = kmalloc (sizeof(char) * count, GFP_KERNEL);
 
 	if (read_buf == NULL)
-		return -ENOMEM;
+	{
+		retval = -ENOMEM;
+		goto READ_FAULT_EXIT;
+	}
 
 	if (count == 0)
-		return 0;
+	{	
+		retval = 0;
+		goto READ_FAULT_EXIT;
+	}
 
-	if ( access_ok (VERIFIY_WRITE, (void __user*)buf, count))
-		return -EFAULT;
+	if ( !access_ok (VERIFIY_WRITE, (void __user*)buf, count))
+	{
+		retval = -EFAULT;
+		goto READ_FAULT_EXIT;
+	}
+
 
 	if (dev == NULL)
-		return -EFAULT;
-
+	{
+		retval = -EFAULT;
+		goto READ_FAULT_EXIT;
+	}
+	
 	dptr = dev -> data;
 
 	if (dptr == NULL )
-	 	return -EFAULT;
+ 	{
+		retval = -EFAULT;
+		goto READ_FAULT_EXIT;
+ 	}
 
 	 qtum_ptr = dptr -> qtum_ptr;
 
-	 if (qtum_ptr == NULL)
-	 	return -EFAULT;
+	if (qtum_ptr == NULL)
+	{
+		retval = -EFAULT;
+		goto READ_FAULT_EXIT;
+	}
 
 	 for (i = 0; i < count; i++)
 	 {
@@ -265,14 +281,18 @@ ssize_t scull_read (struct file *filp, char __user *buf, size_t count, loff_t *f
 
 	if ( copy_to_user (buf, read_buf, i))
 	{
-		return -EFAULT;
+		retval = -EFAULT;
+		goto READ_FAULT_EXIT;
 	}
 
 	kfree(read_buf);
 
-	 return i;
+	return i;
 
+READ_FAULT_EXIT:
 
+	kfree(read_buf);
+	return retval;
 
 }
 
@@ -285,17 +305,20 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 	int wr_cnt = 0;	
 	
 	char * write_buf = kmalloc (sizeof(char) * count, GFP_KERNEL);
-
 	if (count == 0)
-		return 0;
 
-	if ( access_ok (VERIFIY_READ, (void __user*)buf, count))
+		return 0;
+	printk(KERN_ALERT "scull:write initial1!\n");
+
+	if ( !access_ok (VERIFIY_READ, (void __user*)buf, count))
 	{
+		kfree(write_buf);
 		return -EFAULT;
 	}
-	
+
 	if (copy_from_user (write_buf, buf ,count))
 	{
+		kfree(write_buf);
 		return -EFAULT;
 	}
 
@@ -303,6 +326,11 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 	{
 		dev -> data = kmalloc (sizeof(struct scull_qset), GFP_KERNEL);
 		dptr = dev -> data;
+		if (dptr == NULL)
+		{
+			kfree(write_buf);
+			return -ENOMEM;
+		}	
 		dptr -> qset_next = NULL;
 	}
 	else

@@ -9,20 +9,26 @@
 int main()
 {
 	int fd, i;
-	char msg [101];
+	char msg_wr [101];
+	char msg_rd [101];
+
 	for(i=0;i<101;i++)
-        msg[i]='\0';
+        msg_wr[i]='a';
 	
-	fd = open ("/dev/scull_device",  O_RDONLY, S_IRUSR);
+	msg_wr [100]='\0';
+	
+	fd = open ("/dev/scull_device", O_RDWR, S_IRUSR);
 
 	if(fd == -1)
 		{
 			printf ("open fail\n");
 			return 0;
 		}	
+	write (fd, msg_wr, 100);
+	printf ("write finish\n");
 
-	read (fd, msg, 100);
-	printf ("%s\n", msg);
+	read (fd, msg_rd, 100);
+	printf ("%s\n", msg_rd);
 	close(fd);
 	printf ("read finish\n");
 
