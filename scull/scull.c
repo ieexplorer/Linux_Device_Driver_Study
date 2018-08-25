@@ -144,6 +144,34 @@ static void scull_exit(void)
     printk(KERN_ALERT "scull:goodbye!\n");
 }
 
+static int  scull_trim(struct scull_dev *dev)
+{
+	struct scull_qset *dptr, *next ;
+	dptr = dev -> data;
+	
+	if (!dptr)
+		return 0;
+
+	for (dptr = dev -> data; dptr != NULL; dptr = next)
+	{
+		if (dptr -> qtum_ptr != NULL)
+		{
+			int i = 0;
+			qptr_array *array_ptr = dptr -> qtum_ptr;
+			for (i = 0; i < QTUM_PTR_ARRAY_SIZE; i++)
+			{
+				kfree((*array_ptr)[i]);
+				(*array_ptr)[i] = NULL;			
+			}
+		}
+		next = dptr -> qset_next;
+		kfree(dptr);
+		dptr = NULL;
+	}
+	
+	dev -> data = NULL;	
+	return 0;
+}
 
 ssize_t scull_read (struct file *filp, char __user *buf, size_t count, loff_t *f_ops)
 {
@@ -353,6 +381,9 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 
 int scull_release(struct inode *inode, struct file *filp)
 {
+	struct scull_dev *dev;
+	dev = container_of (inode -> i_cdev, struct scull_dev, cdev);
+	scull_trim(dev);
 	return 0;
 }
 module_init(scull_init);
