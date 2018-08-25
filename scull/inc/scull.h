@@ -7,7 +7,6 @@ struct scull_dev {
 
 	 struct 			scull_qset *data;
 	 int 				array_wr_ptr;
-	 int 				array_rd_ptr;
 	 struct semaphore 	sem;
 	 struct cdev 		cdev;
 
