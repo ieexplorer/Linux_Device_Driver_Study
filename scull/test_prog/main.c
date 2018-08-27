@@ -11,6 +11,7 @@ int main()
 	int fd, i;
 	char msg_wr [101];
 	char msg_rd [101];
+	ssize_t result;
 
 	for(i=0;i<101;i++)
         msg_wr[i]='a';
@@ -24,13 +25,29 @@ int main()
 			printf ("open fail\n");
 			return 0;
 		}	
-	write (fd, msg_wr, 100);
-	printf ("write finish\n");
 
-	read (fd, msg_rd, 100);
-	printf ("%s\n", msg_rd);
+	result = write (fd, msg_wr, 100);
+	
+	if (result == -1)
+	{
+		printf("write operation failed\n");
+		close(fd);
+		return -1;
+	}
+
+	printf ("write finish, size written %ld\n", result);
+
+	result = read (fd, msg_wr, 100);
+	
+	if (result == -1)
+	{
+		printf("read operation failed\n");
+		close(fd);
+		return -1;
+
+	}
+	printf ("read finish, size read %ld\n", result);
+
 	close(fd);
-	printf ("read finish\n");
-
 	return 0;
 }

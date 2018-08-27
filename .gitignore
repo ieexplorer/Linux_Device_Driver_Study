@@ -6,3 +6,4 @@
 *.cache.mk
 *.cmd
 *.tmp_version*
+*.out
