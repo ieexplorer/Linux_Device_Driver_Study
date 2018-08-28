@@ -7,3 +7,4 @@
 *.cmd
 *.tmp_version*
 *.out
+*.mod.c
