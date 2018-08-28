@@ -222,7 +222,7 @@ ssize_t scull_read (struct file *filp, char __user *buf, size_t count, loff_t *f
 		goto READ_FAULT_EXIT;
  	}
 
-	 qtum_ptr = dptr -> qtum_ptr;
+	qtum_ptr = dptr -> qtum_ptr;
 
 	if (qtum_ptr == NULL)
 	{

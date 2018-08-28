@@ -14,7 +14,9 @@ int main()
 	ssize_t result;
 
 	for(i=0;i<101;i++)
-        msg_wr[i]='a';
+    {
+    	msg_wr[i]='a' + (i%26);
+    }
 	
 	msg_wr [100]='\0';
 	
@@ -37,7 +39,7 @@ int main()
 
 	printf ("write finish, size written %ld\n", result);
 
-/*	result = read (fd, msg_wr, 100);
+	result = read (fd, msg_rd, 100);
 	
 	if (result == -1)
 	{
@@ -46,7 +48,10 @@ int main()
 		return -1;
 
 	}
-*/	printf ("read finish, size read %ld\n", result);
+	msg_rd[100] = '\0';
+	
+	printf ("read finish, size read %ld\n", result);
+	printf(" String read is %s\n", msg_rd);
 
 	close(fd);
 	return 0;
