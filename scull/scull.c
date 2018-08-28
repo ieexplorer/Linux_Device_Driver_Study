@@ -170,8 +170,9 @@ static int  scull_trim(struct scull_dev *dev)
 		next = dptr -> qset_next;
 		kfree(dptr);
 		dptr = NULL;
+		printk(KERN_ALERT "scull:qset trimed!\n");
+
 	}
-	
 	printk(KERN_ALERT "scull:trim finished!\n");
 
 	dev -> data = NULL;	
@@ -206,7 +207,6 @@ ssize_t scull_read (struct file *filp, char __user *buf, size_t count, loff_t *f
 		retval = -EFAULT;
 		goto READ_FAULT_EXIT;
 	}
-
 
 	if (dev == NULL)
 	{
@@ -323,7 +323,6 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 
 	if (write_buf == NULL)
 	{
-		
 		return -ENOMEM;
 	}
 
@@ -349,6 +348,7 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 			return -ENOMEM;
 		}	
 		dptr -> qset_next = NULL;
+		dptr -> qtum_ptr = NULL;
 	}
 	else
 	{
@@ -376,6 +376,7 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 
 	}
 
+	printk(KERN_ALERT "scull:initial finished!\n");
 
 	while (dptr -> qset_next != NULL)
 	{
@@ -384,11 +385,10 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 
 	for (i_vacancy = 0; i_vacancy < QTUM_PTR_ARRAY_SIZE; i_vacancy++ ) //search the qtum array in vacancy
 	{
+
 		if ( (*(dptr -> qtum_ptr))[i_vacancy] == NULL)
 			break;
 	}
-
-	
 
 	for ( wr_cnt = 0; wr_cnt < count; wr_cnt++)
 	{
@@ -455,7 +455,7 @@ ssize_t scull_write (struct file *filp, const char __user *buf, size_t count, lo
 			i_vacancy %= QTUM_PTR_ARRAY_SIZE;
 			
 		}
-
+		
 		wr_array_ptr = (*(dptr -> qtum_ptr))[i_vacancy - 1];
 		
 		(*wr_array_ptr)[(dev -> array_wr_ptr)] = write_buf[wr_cnt];		
