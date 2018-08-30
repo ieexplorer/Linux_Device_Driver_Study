@@ -113,19 +113,23 @@ static int scull_init(void)
 
     scull_major = MAJOR(i_dev);
     scull_setup_cdev (&dev);
-
+ 	
+ 	proc_create("scullseq", 0644, NULL, &scull_proc_ops);
+    
     return 0;
 }
 
 int scull_open (struct inode *inode, struct file *filp)
 {
 	struct scull_dev *dev;
+	int retval = 0;
+
 	dev = container_of (inode -> i_cdev, struct scull_dev, cdev);
 	filp->private_data = dev;
 
 	dev -> array_wr_ptr = 0;
 
-	return 0;
+	return retval;
 }
 
 static void scull_exit(void)
@@ -137,6 +141,7 @@ static void scull_exit(void)
 	cdev_del(&(dev.cdev));
 	unregister_chrdev_region(devno, scull_nr_dev);
     
+    remove_proc_entry("scullseq", NULL);
     printk(KERN_ALERT "scull:goodbye!\n");
 }
 

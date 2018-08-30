@@ -2,6 +2,7 @@
 #define SCULL_H_MODULE
 #include <linux/cdev.h>
 #include <linux/sem.h>
+#include <linux/seq_file.h>
 
 struct scull_dev {
 
@@ -13,4 +14,5 @@ struct scull_dev {
 };
 
 extern struct scull_dev dev;
+extern struct file_operations scull_proc_ops;
 #endif
