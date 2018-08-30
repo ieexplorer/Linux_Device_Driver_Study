@@ -1,6 +1,5 @@
-MODULE_NAME = scull_module
-SRCS = scull.c
-TEST_SRCS = main.c
+MODULE_NAME = seq_scull_module
+SRCS = seq_scull.c
 OBJS = $(SRCS:.c=.o)
 
 obj-m += $(MODULE_NAME).o
