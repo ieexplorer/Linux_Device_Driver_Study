@@ -21,21 +21,26 @@
 
 #include <linux/seq_file.h>
 
-#define SEQ_NUM 5
+#define SEQ_NUM 10
 
 static void *scull_seq_start (struct seq_file *s, loff_t *pos)
 {
-	printk(KERN_ALERT "scull_seq: start!\n");
+	
+	printk(KERN_ALERT "scull_seq: start!%lld\n", *pos);
 
+	if (*pos >= SEQ_NUM)
+		return NULL;
+	
 	return &dev;
 }
 
 static void *scull_seq_next (struct seq_file *s, void *y, loff_t *pos)
 {
 	
-	printk(KERN_ALERT "scull_seq: start!\n");
-
 	*pos += 1;
+
+	printk(KERN_ALERT "scull_seq: next! %lld\n", *pos);
+
 	if (*pos >= SEQ_NUM)
 		return NULL;
 	
@@ -44,6 +49,7 @@ static void *scull_seq_next (struct seq_file *s, void *y, loff_t *pos)
 
 static void scull_seq_stop (struct seq_file *s ,void *v)
 {
+	printk(KERN_ALERT "scull_seq: stop!\n");
 	return;
 }
 
